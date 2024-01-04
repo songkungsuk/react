@@ -1,24 +1,24 @@
-import React from 'react';
-import logo from './logo.svg';
+import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import './App.css';
+import Article from './components/article';
+import Header from './components/header';
+import List from './components/List';
+import Login from './components/login';
+import { ErrorPage } from './components/errorPage';
+
 
 function App() {
   return (
     <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+      <Header title="안녕하세요" onTest={function(){alert(1)}}/>
+        <BrowserRouter>
+          <Routes>
+            <Route path="/" element={<List/>}></Route>
+            <Route path="/login" element={<Login header="일반 사용자"/>}></Route>
+            <Route path="*" element={<ErrorPage/>}/>
+          </Routes>
+        </BrowserRouter>
+      <Article/>
     </div>
   );
 }
