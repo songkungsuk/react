@@ -10,7 +10,7 @@ import { ErrorPage } from './components/errorPage';
 function App() {
   return (
     <div className="App">
-      <Header title="안녕하세요" onTest={function(){alert(1)}}/>
+      <Header title="오늘은" onTest={function(){alert(1)}}/>
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<List/>}></Route>
