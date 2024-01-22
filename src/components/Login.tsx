@@ -33,7 +33,7 @@ export const Login = () => {
     console.log(chatUser);
   }
   const login = async () => {
-    const res = await axios.post('http://localhost/api/login', chatUser, {
+    const res = await axios.post('http://localhost/api/react/login', chatUser, {
       headers: {
         'Content-Type': 'application/json;chartset=UTF-8'
       }
@@ -50,7 +50,7 @@ export const Login = () => {
         setError(true);
         console.log(err);
       })
-    console.log(res);
+    
   }
 
   return (
