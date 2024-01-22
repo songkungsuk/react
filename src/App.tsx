@@ -1,25 +1,51 @@
-import { BrowserRouter, Route, Routes } from 'react-router-dom';
+import React from 'react';
+import logo from './logo.svg';
+import '../node_modules/bootstrap/dist/css/bootstrap.min.css'
 import './App.css';
-import Article from './components/article';
-import Header from './components/header';
-import List from './components/List';
-import Login from './components/login';
-import { ErrorPage } from './components/errorPage';
+import { Main } from './components/Main';
+import { Login } from './components/Login';
+import { BrowserRouter, Link, Route, Routes } from 'react-router-dom';
+import { SignUp } from './components/SignUp';
 
 
 function App() {
   return (
-    <div className="App">
-      <Header title="오늘은" onTest={function(){alert(1)}}/>
-        <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<List/>}></Route>
-            <Route path="/login" element={<Login header="일반 사용자"/>}></Route>
-            <Route path="*" element={<ErrorPage/>}/>
-          </Routes>
-        </BrowserRouter>
-      <Article/>
-    </div>
+    <BrowserRouter>
+    
+      <div className="App">
+          <nav className="navbar navbar-expand-lg navbar-light fixed-top">
+            <div className="container">
+              <Link className="navbar-brand" to={'/sign-in'}>
+                Chatting
+              </Link>
+              <div className="collapse navbar-collapse" id="navbarTogglerDemo02">
+                <ul className="navbar-nav ml-auto">
+                  <li className="nav-item">
+                    <Link className="nav-link" to={'/sign-in'}>
+                      SignIn
+                    </Link>
+                  </li>
+                  <li className="nav-item">
+                    <Link className="nav-link" to={'/sign-up'}>
+                      SignUp
+                    </Link>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </nav>
+
+          <div className="auth-wrapper">
+            <div className="auth-inner">
+              <Routes>
+                <Route path="/" element={<Login />} />
+                <Route path="/sign-in" element={<Login />} />
+                <Route path="/sign-up" element={<SignUp />} />
+              </Routes>
+            </div>
+          </div>
+        </div>
+    </BrowserRouter>
   );
 }
 
