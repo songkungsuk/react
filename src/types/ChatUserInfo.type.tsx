@@ -1,6 +1,6 @@
 export interface ChatUserInfo{
-    chiNum?:number;
-    chiId?:string;
-    chiPwd?:string;
-    chiName?:string;
+    uiNum?:number;
+    uiId?:string;
+    uiPwd?:string;
+    uiName?:string;
 }

@@ -6,13 +6,13 @@ export const Login = () => {
   const [rememberId, setRememberId] = useState(false);
   const [chatUser, setChatUser] = useState<ChatUserInfo>({});
   const [error, setError] = useState<boolean>(false);
-  let chiId: any = localStorage.getItem('chiId');  
+  let uiId: any = localStorage.getItem('uiId');  
   useEffect(() => {
-    let chiId: any = localStorage.getItem('chiId');  
-    if (chiId) {
+    let uiId: any = localStorage.getItem('uiId');  
+    if (uiId) {
       setChatUser({
         ...chatUser,
-        chiId: chiId
+        uiId: uiId
       })
       setRememberId(true);
     }
@@ -33,7 +33,7 @@ export const Login = () => {
     console.log(chatUser);
   }
   const login = async () => {
-    const res = await axios.post('http://localhost/api/react/login', chatUser, {
+    const res = await axios.post('http://localhost/api/login', chatUser, {
       headers: {
         'Content-Type': 'application/json;chartset=UTF-8'
       }
@@ -41,16 +41,17 @@ export const Login = () => {
       alert('로그인이 완료되었습니다.');
       localStorage.setItem('user', JSON.stringify(res.data));
       if (rememberId) {
-        localStorage.setItem('chiId', res.data.chiId);
+        localStorage.setItem('uiId', res.data.uiId);
       }else{
-        localStorage.removeItem('chiId');
+        localStorage.removeItem('uiId');
       }
+      console.log(res);
     })
       .catch(err => {
         setError(true);
         console.log(err);
       })
-    
+    console.log(res);
   }
 
   return (
@@ -70,8 +71,8 @@ export const Login = () => {
           className="form-control"
           placeholder="아이디"
           onChange={changeUser}
-          id='chiId'
-          value={chiId}
+          id='uiId'
+          value={uiId}
         />
       </div>
 
@@ -82,7 +83,7 @@ export const Login = () => {
           className="form-control"
           placeholder="비밀번호"
           onChange={changeUser}
-          id='chiPwd'
+          id='uiPwd'
         />
       </div>
 
