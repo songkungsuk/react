@@ -3,6 +3,7 @@ import '../node_modules/bootstrap/dist/css/bootstrap.min.css';
 import './App.css';
 import { Login } from './components/Login';
 import { SignUp } from './components/SignUp';
+import { Main } from './components/Main';
 
 
 function App() {
@@ -27,19 +28,25 @@ function App() {
                       SignUp
                     </Link>
                   </li>
+                  <li className="nav-item">
+                    <Link className="nav-link" to={'/main'}>
+                      채팅
+                    </Link>
+                  </li>
                 </ul>
               </div>
             </div>
           </nav>
 
           <div className="auth-wrapper">
-            <div className="auth-inner">
+            
               <Routes>
                 <Route path="/" element={<Login />} />
                 <Route path="/sign-in" element={<Login />} />
                 <Route path="/sign-up" element={<SignUp />} />
+                <Route path="/main" element={<Main />} />
               </Routes>
-            </div>
+            
           </div>
         </div>
     </BrowserRouter>

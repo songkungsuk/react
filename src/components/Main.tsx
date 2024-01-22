@@ -18,10 +18,33 @@ import {
   VoiceCallButton
 } from "@chatscope/chat-ui-kit-react";
 import "@chatscope/chat-ui-kit-styles/dist/default/styles.min.css";
-import { useState } from "react";
+import { Client } from "@stomp/stompjs";
+import { useEffect, useState } from "react";
 
 export const Main = () => {
   const [messageInputValue, setMessageInputValue] = useState("");
+  const user = JSON.parse(localStorage.getItem('user') || '');
+
+  //페이지로딩될때 클라이언트가 변하기때문에 activate가 두번된다 하지만 activate 를 한번만하도록 설정하면된다
+  const client = new Client({
+    brokerURL: 'ws://localhost/react-chat',
+    onConnect: () => {
+      client.subscribe(`/topic/chat/${user.uiNum}`, (data)=>{
+        console.log(data);
+      });
+    },
+    onDisconnect: () => {
+
+    },
+    connectHeaders: {
+      Authorization: user.token,
+      uiNum: user.uiNum
+    }
+  });
+
+  useEffect(() => {
+    client.activate();
+  }, [])
 
   return (
     <div
