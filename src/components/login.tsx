@@ -16,6 +16,7 @@ export const Login = () => {
       })
       setRememberId(true);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
 
@@ -106,7 +107,7 @@ export const Login = () => {
         </button>
       </div>
       <p className="forgot-password text-right">
-        <a href="#">회원가입</a>
+        <a href="/">회원가입</a>
       </p>
     </form>
   )
