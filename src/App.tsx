@@ -1,10 +1,7 @@
-import React from 'react';
-import logo from './logo.svg';
-import '../node_modules/bootstrap/dist/css/bootstrap.min.css'
-import './App.css';
-import { Main } from './components/Main';
-import { Login } from './components/Login';
 import { BrowserRouter, Link, Route, Routes } from 'react-router-dom';
+import '../node_modules/bootstrap/dist/css/bootstrap.min.css';
+import './App.css';
+import { Login } from './components/Login';
 import { SignUp } from './components/SignUp';
 
 

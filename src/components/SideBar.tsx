@@ -1,9 +1,8 @@
-import React from "react";
 // import styles from "@chatscope/chat-ui-kit-styles/dist/default/styles.min.css";
 import {
-  ConversationList,
   Avatar,
-  Conversation
+  Conversation,
+  ConversationList
 } from "@chatscope/chat-ui-kit-react";
 
 export const SideBar = () => {

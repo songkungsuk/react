@@ -1,24 +1,24 @@
 
-import "@chatscope/chat-ui-kit-styles/dist/default/styles.min.css";
-import React, { useState } from "react";
 import {
-  MainContainer,
-  Sidebar,
-  Search,
-  ConversationList,
-  Conversation,
   Avatar,
   ChatContainer,
+  Conversation,
   ConversationHeader,
-  VoiceCallButton,
+  ConversationList,
+  InfoButton,
+  MainContainer,
   Message,
   MessageInput,
-  VideoCallButton,
-  InfoButton,
+  MessageList,
   MessageSeparator,
+  Search,
+  Sidebar,
   TypingIndicator,
-  MessageList
+  VideoCallButton,
+  VoiceCallButton
 } from "@chatscope/chat-ui-kit-react";
+import "@chatscope/chat-ui-kit-styles/dist/default/styles.min.css";
+import { useState } from "react";
 
 export const Main = () => {
   const [messageInputValue, setMessageInputValue] = useState("");

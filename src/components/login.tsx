@@ -1,6 +1,6 @@
-import React, { useEffect, useState } from 'react'
-import { ChatUserInfo } from '../types/ChatUserInfo.type';
 import axios from 'axios';
+import { useEffect, useState } from 'react';
+import { ChatUserInfo } from '../types/ChatUserInfo.type';
 
 export const Login = () => {
   const [rememberId, setRememberId] = useState(false);
