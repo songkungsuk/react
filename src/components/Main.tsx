@@ -28,28 +28,37 @@ export const Main = () => {
   const user = JSON.parse(localStorage.getItem('user') || '');
   const [users, setUsers] = useState<User[]>([]);
   const [msgs, setMsgs] = useState<Msg[]>([]);
+  const [diffrentUser, setdifUser] = useState<User>();
   const client = useRef<any>({});
-  //activate를 useEffect에서 사용하면 Client의 상태변화에 대응하지 못하는 송수신이 일어나므로 따로 함수로 만들고 client.current에 저장한다
-  const init = () =>{
+  //client.activate()를 useEffect에서 사용하면 Client의 상태변화에 대응하지 못하는 송수신이 일어나므로 따로 함수로 만들고 client.current에 저장한다
+  const init = () => {
     client.current = new Client({
       brokerURL: 'ws://localhost/react-chat',
       onConnect: () => {
-        client.current.subscribe(`/topic/enter-chat`, (data:any) => {
+        client.current.subscribe(`/topic/enter-chat`, (data: any) => {
           const tmpUsers = JSON.parse(data.body);
           setUsers(tmpUsers);
         });
-  
-        client.current.subscribe(`/topic/chat/${user.uiNum}`, (data:any) => {
+
+        client.current.subscribe(`/topic/chat/${user.uiNum}`, (data: any) => {
           const msg = JSON.parse(data.body);
           setMsgs(msgs => [...msgs, msg]);
           console.log(msgs);
         });
+
+        client.current.subscribe(`/topic/user-info/${user.uiNum}`, (data: any) => {
+          const userInfo = JSON.parse(data.body);
+          setdifUser(userInfo);
+          console.log(userInfo);
+        });
+
+
       },
       onDisconnect: () => {
-  
+
       },
       connectHeaders: {
-        Authorization: `Bearer ${user.token}`,
+        Authorization: `${user.token}`,
         uiNum: user.uiNum
       }
     });
@@ -66,6 +75,8 @@ export const Main = () => {
     });
     setMessageInputValue('');
   }
+
+
   //useEffect는 브라우저 로딩될때 한번만하게된다
   useEffect(() => {
     init();
@@ -87,11 +98,24 @@ export const Main = () => {
                 lastSenderName={user.uiName}
                 info="Yes i can do it for you"
                 style={{ justifyContent: "start" }}
+                //클릭시 set함수로 useState 변수변경 시도하기 
+                onClick={function () {
+                  let uiNum:any = JSON.parse(localStorage.getItem('user') || '').uiNum;
+                  console.log(user.uiNum);
+                  client.current.publish({
+                    destination: `/publish/user-info/${user.uiNum}`,
+                    body: JSON.stringify({
+                      cmiSenderUiNum: uiNum 
+                    })
+                  });
+                  setMsgs([]);
+                }}
               >
                 <Avatar
                   src={"https://secu-team5-bucket.s3.ap-northeast-2.amazonaws.com/27bafffa-3d26-4e74-a7d5-9bb7e1205c13.png"}
                   name="Lilly"
-                  status={user.login ? 'available' : 'dnd'} />
+                  status={user.login ? 'available' : 'dnd'}
+                />
               </Conversation>
             ))}
           </ConversationList>
@@ -100,10 +124,10 @@ export const Main = () => {
         <ChatContainer>
           <ConversationHeader>
             <ConversationHeader.Back />
-            <Avatar src={"https://secu-team5-bucket.s3.ap-northeast-2.amazonaws.com/27bafffa-3d26-4e74-a7d5-9bb7e1205c13.png"} name="Zoe" />
+            <Avatar src={"https://secu-team5-bucket.s3.ap-northeast-2.amazonaws.com/27bafffa-3d26-4e74-a7d5-9bb7e1205c13.png"} name={diffrentUser ? diffrentUser.uiName : ''} />
             <ConversationHeader.Content
-              userName="Zoe"
-              info="Active 10 mins ago"
+              userName={diffrentUser ? diffrentUser.uiName : 'undefind'}
+              info="Active 10 mins ago" //집가서하기..
             />
             <ConversationHeader.Actions>
               <VoiceCallButton />
@@ -112,8 +136,9 @@ export const Main = () => {
             </ConversationHeader.Actions>
           </ConversationHeader>
           <MessageList
-            typingIndicator={<TypingIndicator content="Zoe is typing" />}
+            typingIndicator={<TypingIndicator content={diffrentUser ? diffrentUser.uiName + " 님이 입력중입니다." : '' } />}
           >
+            <MessageSeparator content="Saturday, 30 November 2019" />
             {
               msgs.map((msg) => (
                 <Message
@@ -131,7 +156,7 @@ export const Main = () => {
               ))
             }
 
-            <MessageSeparator content="Saturday, 30 November 2019" />
+            
 
 
           </MessageList>
