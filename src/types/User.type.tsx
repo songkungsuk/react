@@ -1,4 +1,4 @@
-export interface ChatUserInfo{
+export interface User{
     uiNum?:number;
     uiId?:string;
     uiPwd?:string;

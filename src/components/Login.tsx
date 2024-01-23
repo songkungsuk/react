@@ -1,12 +1,12 @@
 import axios from 'axios';
 import { useEffect, useState } from 'react';
-import { ChatUserInfo } from '../types/ChatUserInfo.type';
+import { User } from '../types/User.type';
 import { useNavigate } from 'react-router-dom';
 
 
 export const Login = () => {
   const [rememberId, setRememberId] = useState(false);
-  const [chatUser, setChatUser] = useState<ChatUserInfo>({});
+  const [chatUser, setChatUser] = useState<User>({});
   const [error, setError] = useState<boolean>(false);
   const navigate = useNavigate();
   let uiId: any = localStorage.getItem('uiId');

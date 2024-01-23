@@ -1,56 +1,75 @@
 
+import "@chatscope/chat-ui-kit-styles/dist/default/styles.min.css";
+import React, { useEffect, useRef, useState } from "react";
 import {
+  MainContainer,
+  Sidebar,
+  Search,
+  ConversationList,
+  Conversation,
   Avatar,
   ChatContainer,
-  Conversation,
   ConversationHeader,
-  ConversationList,
-  InfoButton,
-  MainContainer,
+  VoiceCallButton,
   Message,
   MessageInput,
-  MessageList,
-  MessageSeparator,
-  Search,
-  Sidebar,
-  TypingIndicator,
   VideoCallButton,
-  VoiceCallButton
+  InfoButton,
+  MessageSeparator,
+  TypingIndicator,
+  MessageList
 } from "@chatscope/chat-ui-kit-react";
-import "@chatscope/chat-ui-kit-styles/dist/default/styles.min.css";
 import { Client } from "@stomp/stompjs";
-import { useEffect, useState } from "react";
-import { ChatUserInfo } from "../types/ChatUserInfo.type";
+import { User } from "../types/User.type";
+import { Msg } from "../types/Msg.type";
 
 export const Main = () => {
   const [messageInputValue, setMessageInputValue] = useState("");
   const user = JSON.parse(localStorage.getItem('user') || '');
-  const [users, setUsers] = useState<Array<ChatUserInfo>>([]);
-  //페이지로딩될때 클라이언트가 변하기때문에 activate가 두번된다 하지만 activate 를 한번만하도록 설정하면된다
-  const client = new Client({
-    brokerURL: `ws://localhost/react-chat`,
-    onConnect: () => {
-      client.subscribe(`/topic/enter-chat`, (data) => {
-        console.log(data);
-        const tmpUsers = JSON.parse(data.body);
-        setUsers(tmpUsers);
-        console.log(users);
-
-      });
-    },
-    onDisconnect: () => {
-
-    },
-    connectHeaders: {
-      Authorization: user.token,
-      uiNum: user.uiNum
-    }
-  });
-
+  const [users, setUsers] = useState<User[]>([]);
+  const [msgs, setMsgs] = useState<Msg[]>([]);
+  const client = useRef<any>({});
+  //activate를 useEffect에서 사용하면 Client의 상태변화에 대응하지 못하는 송수신이 일어나므로 따로 함수로 만들고 client.current에 저장한다
+  const init = () =>{
+    client.current = new Client({
+      brokerURL: 'ws://localhost/react-chat',
+      onConnect: () => {
+        client.current.subscribe(`/topic/enter-chat`, (data:any) => {
+          const tmpUsers = JSON.parse(data.body);
+          setUsers(tmpUsers);
+        });
+  
+        client.current.subscribe(`/topic/chat/${user.uiNum}`, (data:any) => {
+          const msg = JSON.parse(data.body);
+          setMsgs(msgs => [...msgs, msg]);
+          console.log(msgs);
+        });
+      },
+      onDisconnect: () => {
+  
+      },
+      connectHeaders: {
+        Authorization: `Bearer ${user.token}`,
+        uiNum: user.uiNum
+      }
+    });
+    client.current.activate();
+  }
+  //메세지 보낼때 /publish 경로를 타고들어간 ReactChat 컨트롤러로 간다
+  const publishMsg = () => {
+    client.current.publish({
+      destination: `/publish/react-chat/${user.uiNum}`,
+      body: JSON.stringify({
+        cmiSenderUiNum: user.uiNum,
+        cmiMessage: messageInputValue
+      })
+    });
+    setMessageInputValue('');
+  }
+  //useEffect는 브라우저 로딩될때 한번만하게된다
   useEffect(() => {
-    client.activate();
-  }, [])
-
+    init();
+  }, []);
   return (
     <div
       style={{
@@ -70,110 +89,18 @@ export const Main = () => {
                 style={{ justifyContent: "start" }}
               >
                 <Avatar
-                  src={require("./images/ram.png")} //이미지는 여기 추가
+                  src={"https://secu-team5-bucket.s3.ap-northeast-2.amazonaws.com/27bafffa-3d26-4e74-a7d5-9bb7e1205c13.png"}
                   name="Lilly"
-                  status={user.login ? 'available' : 'dnd'}
-                />
+                  status={user.login ? 'available' : 'dnd'} />
               </Conversation>
             ))}
-
-
-            {users.map((user, idx) => (
-              <Conversation key={idx}
-                name={user.uiName}
-                lastSenderName={user.uiName}
-                info="Yes i can do it for you"
-                style={{ justifyContent: "start" }}
-              >
-                <Avatar
-                  src={require("./images/ram.png")} //이미지는 여기 추가
-                  name="Lilly"
-                  status={user.login ? 'available' : 'dnd'}
-                />
-              </Conversation>
-            ))}
-
-            <Conversation
-              name="Emily"
-              lastSenderName="Emily"
-              info="Yes i can do it for you"
-              unreadCnt={3}
-            >
-              <Avatar
-                src={require("./images/ram.png")}
-                name="Emily"
-                status="available"
-              />
-            </Conversation>
-
-            <Conversation
-              name="Kai"
-              lastSenderName="Kai"
-              info="Yes i can do it for you"
-              unreadDot
-            >
-              <Avatar
-                src={require("./images/ram.png")}
-                name="Kai"
-                status="unavailable"
-              />
-            </Conversation>
-
-            <Conversation
-              name="Akane"
-              lastSenderName="Akane"
-              info="Yes i can do it for you"
-            >
-              <Avatar
-                src={require("./images/ram.png")}
-                name="Akane"
-                status="eager"
-              />
-            </Conversation>
-
-            <Conversation
-              name="Eliot"
-              lastSenderName="Eliot"
-              info="Yes i can do it for you"
-            >
-              <Avatar
-                src={require("./images/ram.png")}
-                name="Eliot"
-                status="away"
-              />
-            </Conversation>
-
-            <Conversation
-              name="Zoe"
-              lastSenderName="Zoe"
-              info="Yes i can do it for you"
-              active
-            >
-              <Avatar
-                src={require("./images/ram.png")}
-                name="Zoe"
-                status="dnd"
-              />
-            </Conversation>
-
-            <Conversation
-              name="Patrik"
-              lastSenderName="Patrik"
-              info="Yes i can do it for you"
-            >
-              <Avatar
-                src={require("./images/ram.png")}
-                name="Patrik"
-                status="invisible"
-              />
-            </Conversation>
           </ConversationList>
         </Sidebar>
 
         <ChatContainer>
           <ConversationHeader>
             <ConversationHeader.Back />
-            <Avatar src={require("./images/ram.png")} name="Zoe" />
+            <Avatar src={"https://secu-team5-bucket.s3.ap-northeast-2.amazonaws.com/27bafffa-3d26-4e74-a7d5-9bb7e1205c13.png"} name="Zoe" />
             <ConversationHeader.Content
               userName="Zoe"
               info="Active 10 mins ago"
@@ -187,136 +114,32 @@ export const Main = () => {
           <MessageList
             typingIndicator={<TypingIndicator content="Zoe is typing" />}
           >
+            {
+              msgs.map((msg) => (
+                <Message
+                  model={{
+                    message: msg.cmiMessage,
+                    sentTime: msg.cmiSentTime,
+                    sender: msg.cmiSender,
+                    direction: user.uiNum === msg.cmiSenderUiNum ? "outgoing" : "incoming",
+                    position: "normal"
+                  }}
+                  avatarSpacer={user.uiNum === msg.cmiSenderUiNum}
+                >
+                  {user.uiNum === msg.cmiSenderUiNum ? '' : <Avatar src={"https://secu-team5-bucket.s3.ap-northeast-2.amazonaws.com/27bafffa-3d26-4e74-a7d5-9bb7e1205c13.png"} name="Zoe" />}
+                </Message>
+              ))
+            }
+
             <MessageSeparator content="Saturday, 30 November 2019" />
 
-            <Message
-              model={{
-                message: "Hello my friend",
-                sentTime: "15 mins ago",
-                sender: "Zoe",
-                direction: "incoming",
-                position: "single"
-              }}
-            >
-              <Avatar src={require("./images/ram.png")} name="Zoe" />
-            </Message>
 
-            <Message
-              model={{
-                message: "Hello my friend",
-                sentTime: "15 mins ago",
-                sender: "Patrik",
-                direction: "outgoing",
-                position: "single"
-              }}
-              avatarSpacer
-            />
-            <Message
-              model={{
-                message: "Hello my friend",
-                sentTime: "15 mins ago",
-                sender: "Zoe",
-                direction: "incoming",
-                position: "first"
-              }}
-              avatarSpacer
-            />
-            <Message
-              model={{
-                message: "Hello my friend",
-                sentTime: "15 mins ago",
-                sender: "Zoe",
-                direction: "incoming",
-                position: "normal"
-              }}
-              avatarSpacer
-            />
-            <Message
-              model={{
-                message: "Hello my friend",
-                sentTime: "15 mins ago",
-                sender: "Zoe",
-                direction: "incoming",
-                position: "normal"
-              }}
-              avatarSpacer
-            />
-            <Message
-              model={{
-                message: "Hello my friend",
-                sentTime: "15 mins ago",
-                sender: "Zoe",
-                direction: "incoming",
-                position: "last"
-              }}
-            >
-              <Avatar src={require("./images/ram.png")} name="Zoe" />
-            </Message>
-
-            <Message
-              model={{
-                message: "Hello my friend",
-                sentTime: "15 mins ago",
-                sender: "Patrik",
-                direction: "outgoing",
-                position: "first"
-              }}
-            />
-            <Message
-              model={{
-                message: "Hello my friend",
-                sentTime: "15 mins ago",
-                sender: "Patrik",
-                direction: "outgoing",
-                position: "normal"
-              }}
-            />
-            <Message
-              model={{
-                message: "Hello my friend",
-                sentTime: "15 mins ago",
-                sender: "Patrik",
-                direction: "outgoing",
-                position: "normal"
-              }}
-            />
-            <Message
-              model={{
-                message: "Hello my friend",
-                sentTime: "15 mins ago",
-                sender: "Patrik",
-                direction: "outgoing",
-                position: "last"
-              }}
-            />
-
-            <Message
-              model={{
-                message: "Hello my friend",
-                sentTime: "15 mins ago",
-                sender: "Zoe",
-                direction: "incoming",
-                position: "first"
-              }}
-              avatarSpacer
-            />
-            <Message
-              model={{
-                message: "Hello my friend",
-                sentTime: "15 mins ago",
-                sender: "Zoe",
-                direction: "incoming",
-                position: "last"
-              }}
-            >
-              <Avatar src={require("./images/ram.png")} name="Zoe" />
-            </Message>
           </MessageList>
           <MessageInput
             placeholder="Type message here"
             value={messageInputValue}
             onChange={(val) => setMessageInputValue(val)}
-            onSend={() => setMessageInputValue("")}
+            onSend={publishMsg}
           />
         </ChatContainer>
 
