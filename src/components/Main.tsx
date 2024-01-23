@@ -20,17 +20,22 @@ import {
 import "@chatscope/chat-ui-kit-styles/dist/default/styles.min.css";
 import { Client } from "@stomp/stompjs";
 import { useEffect, useState } from "react";
+import { ChatUserInfo } from "../types/ChatUserInfo.type";
 
 export const Main = () => {
   const [messageInputValue, setMessageInputValue] = useState("");
   const user = JSON.parse(localStorage.getItem('user') || '');
-
+  const [users, setUsers] = useState<Array<ChatUserInfo>>([]);
   //페이지로딩될때 클라이언트가 변하기때문에 activate가 두번된다 하지만 activate 를 한번만하도록 설정하면된다
   const client = new Client({
-    brokerURL: 'ws://localhost/react-chat',
+    brokerURL: `ws://localhost/react-chat`,
     onConnect: () => {
-      client.subscribe(`/topic/chat/${user.uiNum}`, (data)=>{
+      client.subscribe(`/topic/enter-chat`, (data) => {
         console.log(data);
+        const tmpUsers = JSON.parse(data.body);
+        setUsers(tmpUsers);
+        console.log(users);
+
       });
     },
     onDisconnect: () => {
@@ -57,30 +62,36 @@ export const Main = () => {
         <Sidebar position="left" scrollable={false}>
           <Search placeholder="Search..." />
           <ConversationList>
-            <Conversation
-              name="Lilly"
-              lastSenderName="Lilly"
-              info="Yes i can do it for you"
-              style={{ justifyContent: "start" }}
-            >
-              <Avatar
-                src={require("./images/ram.png")}
-                name="Lilly"
-                status="available"
-              />
-            </Conversation>
+            {users.map((user, idx) => (
+              <Conversation key={idx}
+                name={user.uiName}
+                lastSenderName={user.uiName}
+                info="Yes i can do it for you"
+                style={{ justifyContent: "start" }}
+              >
+                <Avatar
+                  src={require("./images/ram.png")} //이미지는 여기 추가
+                  name="Lilly"
+                  status={user.login ? 'available' : 'dnd'}
+                />
+              </Conversation>
+            ))}
 
-            <Conversation
-              name="Joe"
-              lastSenderName="Joe"
-              info="Yes i can do it for you"
-            >
-              <Avatar
-                src={require("./images/ram.png")}
-                name="Joe"
-                status="dnd"
-              />
-            </Conversation>
+
+            {users.map((user, idx) => (
+              <Conversation key={idx}
+                name={user.uiName}
+                lastSenderName={user.uiName}
+                info="Yes i can do it for you"
+                style={{ justifyContent: "start" }}
+              >
+                <Avatar
+                  src={require("./images/ram.png")} //이미지는 여기 추가
+                  name="Lilly"
+                  status={user.login ? 'available' : 'dnd'}
+                />
+              </Conversation>
+            ))}
 
             <Conversation
               name="Emily"

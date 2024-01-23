@@ -13,5 +13,6 @@ export interface ChatUserInfo{
 	uiLmodat?:string;
 	uiLmotim?:string;
     token?:string;
+	login?:string;
 
 }
