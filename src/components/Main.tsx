@@ -43,7 +43,7 @@ export const Main = () => {
         client.current.subscribe(`/topic/chat/${user.uiNum}`, (data: any) => {
           const msg = JSON.parse(data.body);
           setMsgs(msgs => [...msgs, msg]);
-          console.log(msgs);
+          
         });
 
         client.current.subscribe(`/topic/user-info/${user.uiNum}`, (data: any) => {
@@ -70,10 +70,12 @@ export const Main = () => {
       destination: `/publish/react-chat/${user.uiNum}`,
       body: JSON.stringify({
         cmiSenderUiNum: user.uiNum,
-        cmiMessage: messageInputValue
+        cmiMessage: messageInputValue,
+        cmiReceiveUiNum: diffrentUser?.uiNum
       })
     });
     setMessageInputValue('');
+    console.log(msgs);
   }
 
 
