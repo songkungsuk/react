@@ -36,7 +36,7 @@ export const Login = () => {
     console.log(chatUser);
   }
   const login = async () => {
-    const res = await axios.post('http://localhost/api/login', chatUser, {
+    const res = await axios.post(`${process.env.REACT_APP_HTTP_PROTOCAL}://${process.env.REACT_APP_HOST}/api/login`, chatUser, {
       headers: {
         'Content-Type': 'application/json;charset=UTF-8'
       }

@@ -1,4 +1,3 @@
-
 import "@chatscope/chat-ui-kit-styles/dist/default/styles.min.css";
 import React, { useEffect, useRef, useState } from "react";
 import {
@@ -27,13 +26,17 @@ export const Main = () => {
   const [messageInputValue, setMessageInputValue] = useState("");
   const user = JSON.parse(localStorage.getItem('user') || '');
   const [users, setUsers] = useState<User[]>([]);
+  //상대방이 보낸메세지
   const [msgs, setMsgs] = useState<Msg[]>([]);
+  //상대방이 보내고 있는중일때 메세지 길이를판단하기위한 메세지
+  const [message, setMessage] = useState<Msg>();
   const [diffrentUser, setdifUser] = useState<User>();
   const client = useRef<any>({});
+  const [typing, setTyping] = useState<boolean>(false);
   //client.activate()를 useEffect에서 사용하면 Client의 상태변화에 대응하지 못하는 송수신이 일어나므로 따로 함수로 만들고 client.current에 저장한다
   const init = () => {
     client.current = new Client({
-      brokerURL: 'ws://localhost/react-chat',
+      brokerURL: `${process.env.REACT_APP_WS_PROTOCAL}://${process.env.REACT_APP_HOST}/react-chat`,
       onConnect: () => {
         client.current.subscribe(`/topic/enter-chat`, (data: any) => {
           const tmpUsers = JSON.parse(data.body);
@@ -43,7 +46,7 @@ export const Main = () => {
         client.current.subscribe(`/topic/chat/${user.uiNum}`, (data: any) => {
           const msg = JSON.parse(data.body);
           setMsgs(msgs => [...msgs, msg]);
-          
+
         });
 
         client.current.subscribe(`/topic/user-info/${user.uiNum}`, (data: any) => {
@@ -52,6 +55,15 @@ export const Main = () => {
           console.log(userInfo);
         });
 
+        client.current.subscribe(`/topic/chat-length/${user.uiNum}`, (data: any) => {
+          const message = JSON.parse(data.body);
+          setMessage(message);
+          if(diffrentUser?.uiNum === message?.cmiSenderUiNum){
+            if(message?.cmiMessage?.length){
+              setTyping(message?.cmiMessage?.length > 0);  
+            }
+          }
+        });
 
       },
       onDisconnect: () => {
@@ -75,9 +87,22 @@ export const Main = () => {
       })
     });
     setMessageInputValue('');
-    console.log(msgs);
+
   }
 
+  //메세지를 입력중일때 /publish 경로를 타고들어간 ReactChat 컨트롤러로 가서 메세지 vo를 반환
+  const CheckMessageLength = () => {
+    client.current.publish({
+      destination: `/publish/chat-length/${user.uiNum}`,
+      body: JSON.stringify({
+        cmiSenderUiNum: user.uiNum,
+        cmiMessage: messageInputValue,
+        cmiReceiveUiNum: diffrentUser?.uiNum
+      })
+    });
+
+
+  }
 
   //useEffect는 브라우저 로딩될때 한번만하게된다
   useEffect(() => {
@@ -102,12 +127,12 @@ export const Main = () => {
                 style={{ justifyContent: "start" }}
                 //클릭시 set함수로 useState 변수변경 시도하기 
                 onClick={function () {
-                  let uiNum:any = JSON.parse(localStorage.getItem('user') || '').uiNum;
+                  let uiNum: any = JSON.parse(localStorage.getItem('user') || '').uiNum;
                   console.log(user.uiNum);
                   client.current.publish({
                     destination: `/publish/user-info/${user.uiNum}`,
                     body: JSON.stringify({
-                      cmiSenderUiNum: uiNum 
+                      cmiSenderUiNum: uiNum
                     })
                   });
                   setMsgs([]);
@@ -138,7 +163,7 @@ export const Main = () => {
             </ConversationHeader.Actions>
           </ConversationHeader>
           <MessageList
-            typingIndicator={<TypingIndicator content={diffrentUser ? diffrentUser.uiName + " 님이 입력중입니다." : '' } />}
+            typingIndicator={typing ? <TypingIndicator content={diffrentUser ? diffrentUser.uiName + " 님이 입력중입니다." : ''} /> : ''}
           >
             <MessageSeparator content="Saturday, 30 November 2019" />
             {
@@ -158,14 +183,23 @@ export const Main = () => {
               ))
             }
 
-            
+
 
 
           </MessageList>
           <MessageInput
             placeholder="Type message here"
             value={messageInputValue}
-            onChange={(val) => setMessageInputValue(val)}
+            onChange={(val) => {
+              setMessageInputValue(val);
+              CheckMessageLength();
+              if(diffrentUser?.uiNum === message?.cmiSenderUiNum){
+                if(message?.cmiMessage?.length){
+                  setTyping(message?.cmiMessage?.length > 0);  
+                }
+              }
+              console.log(message);
+            }}
             onSend={publishMsg}
           />
         </ChatContainer>
