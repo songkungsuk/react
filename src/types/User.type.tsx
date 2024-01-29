@@ -14,5 +14,6 @@ export interface User{
 	uiLmotim?:string;
     token?:string;
 	login?:string;
+	loginDate?:string;
 
 }

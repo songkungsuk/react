@@ -21,13 +21,14 @@ import {
 import { Client } from "@stomp/stompjs";
 import { User } from "../types/User.type";
 import { Msg } from "../types/Msg.type";
+import { delay } from "@reduxjs/toolkit/dist/utils";
 
 export const Main = () => {
   const [messageInputValue, setMessageInputValue] = useState("");
   const user = JSON.parse(localStorage.getItem('user') || '');
   const [users, setUsers] = useState<User[]>([]);
   //상대방이 보낸메세지
-  const [msgs, setMsgs] = useState<Msg[]>([]);
+  let [msgs, setMsgs] = useState<Msg[]>([]);
   //상대방이 보내고 있는중일때 메세지 길이를판단하기위한 메세지
   const [message, setMessage] = useState<Msg>();
   const [diffrentUser, setdifUser] = useState<User>();
@@ -52,17 +53,17 @@ export const Main = () => {
         client.current.subscribe(`/topic/user-info/${user.uiNum}`, (data: any) => {
           const userInfo = JSON.parse(data.body);
           setdifUser(userInfo);
-          console.log(userInfo);
         });
 
         client.current.subscribe(`/topic/chat-length/${user.uiNum}`, (data: any) => {
           const message = JSON.parse(data.body);
           setMessage(message);
-          if(diffrentUser?.uiNum === message?.cmiSenderUiNum){
-            if(message?.cmiMessage?.length){
-              setTyping(message?.cmiMessage?.length > 0);  
-            }
-          }
+        });
+
+        client.current.subscribe(`/topic/message-log/${user.uiNum}`, (data: any) => {
+          const msg = JSON.parse(data.body);
+          setMsgs(msg);
+          console.log(msg);
         });
 
       },
@@ -90,6 +91,22 @@ export const Main = () => {
 
   }
 
+  const MessageLog = () => {
+    client.current.publish({
+      destination: `/publish/message-log/${user.uiNum}`,
+      body: JSON.stringify({
+        cmiSenderUiNum: user.uiNum,
+        cmiMessage: messageInputValue,
+        cmiReceiveUiNum: diffrentUser?.uiNum
+      })
+    });
+
+
+    setMsgs(msgs);
+
+  }
+
+
   //메세지를 입력중일때 /publish 경로를 타고들어간 ReactChat 컨트롤러로 가서 메세지 vo를 반환
   const CheckMessageLength = () => {
     client.current.publish({
@@ -103,8 +120,10 @@ export const Main = () => {
 
 
   }
-
-  //useEffect는 브라우저 로딩될때 한번만하게된다
+  useEffect(() => {
+    setMsgs(msgs);
+  }, [msgs]);
+  //useEffect의 매개변수가 [] 인경우 한번만 하게됨
   useEffect(() => {
     init();
   }, []);
@@ -126,16 +145,18 @@ export const Main = () => {
                 info="Yes i can do it for you"
                 style={{ justifyContent: "start" }}
                 //클릭시 set함수로 useState 변수변경 시도하기 
-                onClick={function () {
+                onClick={async function () {
+                  setMsgs(msgs);
                   let uiNum: any = JSON.parse(localStorage.getItem('user') || '').uiNum;
-                  console.log(user.uiNum);
+                  
                   client.current.publish({
                     destination: `/publish/user-info/${user.uiNum}`,
                     body: JSON.stringify({
                       cmiSenderUiNum: uiNum
                     })
-                  });
-                  setMsgs([]);
+                  })
+                  MessageLog();
+                  setMsgs(msgs);
                 }}
               >
                 <Avatar
@@ -154,7 +175,7 @@ export const Main = () => {
             <Avatar src={"https://secu-team5-bucket.s3.ap-northeast-2.amazonaws.com/27bafffa-3d26-4e74-a7d5-9bb7e1205c13.png"} name={diffrentUser ? diffrentUser.uiName : ''} />
             <ConversationHeader.Content
               userName={diffrentUser ? diffrentUser.uiName : 'undefind'}
-              info="Active 10 mins ago" //집가서하기..
+              info={diffrentUser ? diffrentUser.loginDate : ''} //집가서하기..
             />
             <ConversationHeader.Actions>
               <VoiceCallButton />
@@ -193,9 +214,9 @@ export const Main = () => {
             onChange={(val) => {
               setMessageInputValue(val);
               CheckMessageLength();
-              if(diffrentUser?.uiNum === message?.cmiSenderUiNum){
-                if(message?.cmiMessage?.length){
-                  setTyping(message?.cmiMessage?.length > 0);  
+              if (diffrentUser?.uiNum === message?.cmiSenderUiNum) {
+                if (message?.cmiMessage?.length) {
+                  setTyping(message?.cmiMessage?.length > 0);
                 }
               }
               console.log(message);
