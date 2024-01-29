@@ -1,27 +1,26 @@
-import "@chatscope/chat-ui-kit-styles/dist/default/styles.min.css";
-import React, { useEffect, useRef, useState } from "react";
 import {
-  MainContainer,
-  Sidebar,
-  Search,
-  ConversationList,
-  Conversation,
   Avatar,
   ChatContainer,
+  Conversation,
   ConversationHeader,
-  VoiceCallButton,
+  ConversationList,
+  InfoButton,
+  MainContainer,
   Message,
   MessageInput,
-  VideoCallButton,
-  InfoButton,
+  MessageList,
   MessageSeparator,
+  Search,
+  Sidebar,
   TypingIndicator,
-  MessageList
+  VideoCallButton,
+  VoiceCallButton
 } from "@chatscope/chat-ui-kit-react";
+import "@chatscope/chat-ui-kit-styles/dist/default/styles.min.css";
 import { Client } from "@stomp/stompjs";
-import { User } from "../types/User.type";
+import { useEffect, useRef, useState } from "react";
 import { Msg } from "../types/Msg.type";
-import { delay } from "@reduxjs/toolkit/dist/utils";
+import { User } from "../types/User.type";
 
 export const Main = () => {
   const [messageInputValue, setMessageInputValue] = useState("");
@@ -29,8 +28,6 @@ export const Main = () => {
   const [users, setUsers] = useState<User[]>([]);
   //상대방이 보낸메세지
   let [msgs, setMsgs] = useState<Msg[]>([]);
-  //상대방이 보내고 있는중일때 메세지 길이를판단하기위한 메세지
-  const [message, setMessage] = useState<Msg>();
   const [diffrentUser, setdifUser] = useState<User>();
   const client = useRef<any>({});
   const [typing, setTyping] = useState<boolean>(false);
@@ -53,11 +50,12 @@ export const Main = () => {
 
         client.current.subscribe(`/topic/chat-length/${user.uiNum}`, (data: any) => {
           const message = JSON.parse(data.body);
-          setMessage(message);
+          console.log(message.cmiMessage);
+          console.log(data.body);
+          setTyping(message.cmiMessage.length > 0);
         });
 
         client.current.subscribe(`/topic/message-log/${user.uiNum}`, (data: any) => {
-          
           const msg = JSON.parse(data.body);
           setMsgs(msg);
           console.log(msg);
@@ -105,12 +103,12 @@ export const Main = () => {
 
 
   //메세지를 입력중일때 /publish 경로를 타고들어간 ReactChat 컨트롤러로 가서 메세지 vo를 반환
-  const CheckMessageLength = () => {
+  const CheckMessageLength = (value:any) => {
     client.current.publish({
       destination: `/publish/chat-length/${user.uiNum}`,
       body: JSON.stringify({
         cmiSenderUiNum: user.uiNum,
-        cmiMessage: messageInputValue,
+        cmiMessage: value,
         cmiReceiveUiNum: diffrentUser?.uiNum
       })
     });
@@ -205,13 +203,7 @@ export const Main = () => {
             value={messageInputValue}
             onChange={(val) => {
               setMessageInputValue(val);
-              CheckMessageLength();
-              if (diffrentUser?.uiNum === message?.cmiSenderUiNum) {
-                if (message?.cmiMessage?.length) {
-                  setTyping(message?.cmiMessage?.length > 0);
-                }
-              }
-              console.log(message);
+              CheckMessageLength(val);
             }}
             onSend={publishMsg}
           />
