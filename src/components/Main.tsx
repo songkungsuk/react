@@ -52,6 +52,7 @@ export const Main = () => {
           const message = JSON.parse(data.body);
           console.log(message.cmiMessage);
           console.log(data.body);
+          //typing 이 true이냐 false에 따라 메세지 입력중이 결정됨
           setTyping(message.cmiMessage.length > 0);
         });
 
@@ -73,6 +74,7 @@ export const Main = () => {
     client.current.activate();
   }
   //메세지 보낼때 /publish 경로를 타고들어간 ReactChat 컨트롤러로 간다
+  //채팅보내는 메소드
   const publishMsg = () => {
     client.current.publish({
       destination: `/publish/react-chat/${user.uiNum}`,
@@ -83,9 +85,10 @@ export const Main = () => {
       })
     });
     setMessageInputValue('');
-
+    
   }
 
+  //채팅기록 보는 메소드
   const MessageLog = (ReceiveUiNum:any) => {
     client.current.publish({
       destination: `/publish/message-log/${user.uiNum}`,
