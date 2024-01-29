@@ -39,6 +39,7 @@ export const Main = () => {
     client.current = new Client({
       brokerURL: `${process.env.REACT_APP_WS_PROTOCAL}://${process.env.REACT_APP_HOST}/react-chat`,
       onConnect: () => {
+        //data는 smt.convertAndSend로 응답한 res 느낌..?
         client.current.subscribe(`/topic/enter-chat`, (data: any) => {
           const tmpUsers = JSON.parse(data.body);
           setUsers(tmpUsers);
@@ -50,17 +51,13 @@ export const Main = () => {
 
         });
 
-        client.current.subscribe(`/topic/user-info/${user.uiNum}`, (data: any) => {
-          const userInfo = JSON.parse(data.body);
-          setdifUser(userInfo);
-        });
-
         client.current.subscribe(`/topic/chat-length/${user.uiNum}`, (data: any) => {
           const message = JSON.parse(data.body);
           setMessage(message);
         });
 
         client.current.subscribe(`/topic/message-log/${user.uiNum}`, (data: any) => {
+          
           const msg = JSON.parse(data.body);
           setMsgs(msg);
           console.log(msg);
@@ -91,13 +88,13 @@ export const Main = () => {
 
   }
 
-  const MessageLog = () => {
+  const MessageLog = (ReceiveUiNum:any) => {
     client.current.publish({
       destination: `/publish/message-log/${user.uiNum}`,
       body: JSON.stringify({
         cmiSenderUiNum: user.uiNum,
         cmiMessage: messageInputValue,
-        cmiReceiveUiNum: diffrentUser?.uiNum
+        cmiReceiveUiNum: ReceiveUiNum
       })
     });
 
@@ -146,16 +143,11 @@ export const Main = () => {
                 style={{ justifyContent: "start" }}
                 //클릭시 set함수로 useState 변수변경 시도하기 
                 onClick={async function () {
-                  setMsgs(msgs);
-                  let uiNum: any = JSON.parse(localStorage.getItem('user') || '').uiNum;
-                  
-                  client.current.publish({
-                    destination: `/publish/user-info/${user.uiNum}`,
-                    body: JSON.stringify({
-                      cmiSenderUiNum: uiNum
-                    })
-                  })
-                  MessageLog();
+                  //선택한 사용자를 useState사용해서 저장하고 활용
+                  setdifUser(user);
+                  //선택한 사용자에 대한 메세지 객체를 반환
+                  MessageLog(user.uiNum);
+                  //메세지내역을 보여줌
                   setMsgs(msgs);
                 }}
               >
@@ -174,8 +166,8 @@ export const Main = () => {
             <ConversationHeader.Back />
             <Avatar src={"https://secu-team5-bucket.s3.ap-northeast-2.amazonaws.com/27bafffa-3d26-4e74-a7d5-9bb7e1205c13.png"} name={diffrentUser ? diffrentUser.uiName : ''} />
             <ConversationHeader.Content
-              userName={diffrentUser ? diffrentUser.uiName : 'undefind'}
-              info={diffrentUser ? diffrentUser.loginDate : ''} //집가서하기..
+              userName={diffrentUser ? diffrentUser.uiName : user.uiName}
+              info={diffrentUser ? diffrentUser.loginDate : user.loginDate} //집가서하기..
             />
             <ConversationHeader.Actions>
               <VoiceCallButton />
