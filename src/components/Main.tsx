@@ -21,6 +21,7 @@ import { Client } from "@stomp/stompjs";
 import { useEffect, useRef, useState } from "react";
 import { Msg } from "../types/Msg.type";
 import { User } from "../types/User.type";
+import axios from "axios";
 
 export const Main = () => {
   const [messageInputValue, setMessageInputValue] = useState("");
@@ -56,12 +57,6 @@ export const Main = () => {
           setTyping(message.cmiMessage.length > 0);
         });
 
-        client.current.subscribe(`/topic/message-log/${user.uiNum}`, (data: any) => {
-          const msg = JSON.parse(data.body);
-          setMsgs(msg);
-          console.log(msg);
-        });
-
       },
       onDisconnect: () => {
 
@@ -88,21 +83,6 @@ export const Main = () => {
     
   }
 
-  //채팅기록 보는 메소드
-  const MessageLog = (ReceiveUiNum:any) => {
-    client.current.publish({
-      destination: `/publish/message-log/${user.uiNum}`,
-      body: JSON.stringify({
-        cmiSenderUiNum: user.uiNum,
-        cmiMessage: messageInputValue,
-        cmiReceiveUiNum: ReceiveUiNum
-      })
-    });
-
-
-    setMsgs(msgs);
-
-  }
 
 
   //메세지를 입력중일때 /publish 경로를 타고들어간 ReactChat 컨트롤러로 가서 메세지 vo를 반환
@@ -146,10 +126,16 @@ export const Main = () => {
                 onClick={async function () {
                   //선택한 사용자를 useState사용해서 저장하고 활용
                   setdifUser(user);
-                  //선택한 사용자에 대한 메세지 객체를 반환
-                  MessageLog(user.uiNum);
+
+                  const res = await axios.get(`${process.env.REACT_APP_HTTP_PROTOCAL}://${process.env.REACT_APP_HOST}/message-log/${user.uiNum}/${JSON.parse(localStorage.getItem('user') || '').uiNum}`,{
+                    headers: {
+                      Authorization: `${JSON.parse(localStorage.getItem('user') || '').token}`
+                    }
+                  });                  
+                  const json = res.data;
+                  console.log(json);
                   //메세지내역을 보여줌
-                  setMsgs(msgs);
+                  setMsgs(json);
                 }}
               >
                 <Avatar
